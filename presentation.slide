@@ -2,15 +2,60 @@
 
 Are you the type of person who needs to know how things work under the hood? If so, this interactive talk will provide a fun way to learn go concurrency concepts by building your own. We'll write our own version of Go's WaitGroup, Mutex, and Channel from scratch to see how they really work behind the scenes.
 
+## What is a WaitGroup?
+
+A concurrency tool that tracks the number of in-progress operations, then waits for all operations to complete.
 
 ## sync.WaitGroup
 
-Let's get started with a trivial usage of a sync.WaitGroup.
+Let's get started with a simple example of a sync.WaitGroup.
 
 .play 1-waitgroup.go /func main/,
 
 ## Custom WaitGroup
 
-The purpose of this is not to use sync.WaitGroup, but to create our own.
+The purpose of this talk is not to use sync.WaitGroup, but to create our own.
 
 .play 2-customwaitgroup.go /type WaitGroup/,
+
+## Filling in the logic
+
+Could it really be this simple?
+
+.play 3-race-condition-waitgroup.go /type WaitGroup/,
+
+## Data Race
+
+Unfortunately, the race detector shows that we have a race condition.
+
+```
+❯ go run -race 3-race-condition-waitgroup.go
+Saw i = 0
+Saw i = 1
+==================
+WARNING: DATA RACE
+Read at 0x00c000136008 by goroutine 7:
+  main.(*WaitGroup).Done()
+      /Users/justin/code/presentation/3-race-condition-waitgroup.go:29 +0x3a
+  main.main.func1()
+      /Users/justin/code/presentation/3-race-condition-waitgroup.go:13 +0x123
+
+Previous write at 0x00c000136008 by main goroutine:
+  main.(*WaitGroup).Add()
+      /Users/justin/code/presentation/3-race-condition-waitgroup.go:25 +0x86
+  main.main()
+      /Users/justin/code/presentation/3-race-condition-waitgroup.go:9 +0x67
+
+Goroutine 7 (running) created at:
+  main.main()
+      /Users/justin/code/presentation/3-race-condition-waitgroup.go:10 +0xbd
+==================
+```
+
+## Demonstrating the race condition
+
+.play 4-demonstrate-race-condition.go /func main/,
+
+## Add a little Mutex
+
+.play 5-mutex.go /type WaitGroup/,
