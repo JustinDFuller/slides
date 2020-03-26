@@ -1,10 +1,16 @@
-# Learn Go Concurrency Concepts By Building Your Own
+# Deconstructing Go Concurrency Concepts
 
-Are you the type of person who needs to know how things work under the hood? If so, this interactive talk will provide a fun way to learn go concurrency concepts by building your own. We'll write a Golang WaitGroup, Mutex, and Channel from scratch to see how they really work behind the scenes.
+Are you the type of person who needs to know how things work under the hood? If so, this interactive talk will provide a fun way to learn go concurrency concepts by building your own. We'll write our own version of Go's WaitGroup, Mutex, and Channel from scratch to see how they really work behind the scenes.
 
 
 ## sync.WaitGroup
 
 Let's get started with a trivial usage of a sync.WaitGroup.
 
-.play 1-waitgroup.go
+.play 1-waitgroup.go /func main/,
+
+## Custom WaitGroup
+
+The purpose of this is not to use sync.WaitGroup, but to create our own.
+
+.play 2-customwaitgroup.go /type WaitGroup/,

@@ -6,16 +6,16 @@ import (
 )
 
 func main() {
-	var wg sync.WaitGroup
+	var wg sync.WaitGroup // HL
 
 	for i := 0; i < 10; i++ {
-		wg.Add(1)
+		wg.Add(1) // HL
 		go func(i int) {
-			defer wg.Done()
+			defer wg.Done() // HL
 			fmt.Println("Saw i =", i)
 		}(i)
 	}
 
-	wg.Wait()
+	wg.Wait() // HL
 	fmt.Println("Done")
 }
