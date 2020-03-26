@@ -2,31 +2,59 @@
 
 Are you the type of person who needs to know how things work under the hood? If so, this interactive talk will provide a fun way to learn go concurrency concepts by building your own. We'll write our own version of Go's WaitGroup, Mutex, and Channel from scratch to see how they really work behind the scenes.
 
-## What is a WaitGroup?
+## What is a Concurrency Concept?
 
-A concurrency tool that tracks the number of in-progress operations, then waits for all operations to complete.
+* Go has implementations of concepts.
+* Concept examples
+  * WaitGroup
+  * Mutex
+  * Pool
+  * Channel
+
+## How do you deconstruct a concept?
+
+1. Define
+    * Agree on a clear explanation of what an implementation of the concept would accomplish.
+
+2. Use
+    * If an implementation already exists, start with that.
+
+3. Create
+    * After using any existing implementations, write and use your own.
+
+## First, a little code.
+
+At this point, we are naive programmers with no concurrency concepts to aid us.
+
+.play 0-naive-concurrency.go /func main/,
+
+## Our First Concept
+
+The current code doesn't work as expected. All the logs should be printed before "done".
+
+We need a concurrency tool that tracks the number of in-progress operations, then waits for all operations to complete.
+
+We will accomplish this with a __WaitGroup__.
 
 ## sync.WaitGroup
 
-Let's get started with a simple example of a sync.WaitGroup.
+Now that we've defined what we need, we use an existing implementation of WaitGroup from Go's `sync` package.
 
 .play 1-waitgroup.go /func main/,
 
 ## Custom WaitGroup
 
-The purpose of this talk is not to use sync.WaitGroup, but to create our own.
+We have defined what a waitgroup should do. We have used an existing implementation. It's time to create our own.
 
 .play 2-customwaitgroup.go /type WaitGroup/,
 
-## Filling in the logic
+## Filling in the logic 
 
-Could it really be this simple?
+Could it really be this simple? 🙌
 
 .play 3-race-condition-waitgroup.go /type WaitGroup/,
 
-## Data Race
-
-Unfortunately, the race detector shows that we have a race condition.
+## Race Detector 🕵️‍♀️
 
 ```
 ❯ go run -race 3-race-condition-waitgroup.go
@@ -56,6 +84,26 @@ Goroutine 7 (running) created at:
 
 .play 4-demonstrate-race-condition.go /func main/,
 
-## Add a little Mutex
+## Preventing Race Conditions
+
+It's time to define a new concept before we deconstruct it.
+
+We need to prevent _conflicting access_ to the WaitGroup's counter. To accomplish this we will use a lock, or __Mutex__.
+
+The goal of a mutex is to prevent conflicting access to data, ensuring that updates happen as expected.
+
+## Lock It Down 🔒
+
+We've defined a Mutex, now we use an existing implementation. Again, we start with Go's `sync` package.
 
 .play 5-mutex.go /type WaitGroup/,
+
+## Build Your Own
+
+Just like before, we start with an empty shell that fulfills sync.Mutex's signature, but not behavior. The race condition reappears.
+
+.play 6-custom-mutex.go /type Mutex/,
+
+## Filling It In
+
+.play 7-naive-mutex.go /type Mutex/,

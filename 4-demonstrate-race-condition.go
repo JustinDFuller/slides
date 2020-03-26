@@ -16,6 +16,7 @@ func (wg *WaitGroup) Done() {
 
 func (wg *WaitGroup) Wait() {
 	for {
+		fmt.Println("WaitGroup Count: ", wg.i)
 		if wg.i <= 0 {
 			break
 		}
