@@ -82,6 +82,8 @@ Goroutine 7 (running) created at:
 
 ## Demonstrating the race condition
 
+_Note: I would not consider this correct usage of a WaitGroup._
+
 .play 4-demonstrate-race-condition.go /func main/,
 
 ## Preventing Race Conditions
@@ -107,3 +109,17 @@ Just like before, we start with an empty shell that fulfills sync.Mutex's signat
 ## Filling It In
 
 .play 7-naive-mutex.go /type Mutex/,
+
+## Without a race condition.
+
+.play 8-channel-mutex.go /const/,
+
+## Can we go any lower?
+
+So far we have gone progressively "lower", first using, then writing our own WaitGroup, then Mutex.
+
+We can't go any lower because the implementations of atomic are written in assembly.
+
+.code 9-atomic.s
+
+This code obtains a lock at the processor level.
