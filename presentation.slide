@@ -2,6 +2,19 @@
 
 Are you the type of person who needs to know how things work under the hood? If so, this interactive talk will provide a fun way to learn go concurrency concepts by building your own. We'll write our own version of Go's WaitGroup, Mutex, and Channel from scratch to see how they really work behind the scenes.
 
+## 
+
+.image ./images/learn-to-code-nyt-deconstructing-go-concurrency-concepts.jpg _ 950
+
+## Intro
+
+👋 I'm Justin Fuller, a Software Engineer at The New York Times. 
+
+I'm a self-taught developer with about 5 years of experience.
+
+I've worked professionally with Java, Coldfusion, JavaScript, C#, and Go. So far, Go is my favorite!
+
+
 ## What is a Concurrency Concept?
 
 * Go has implementations of concepts.
@@ -123,3 +136,9 @@ We can't go any lower because the implementations of atomic are written in assem
 .code 9-atomic.s
 
 This code obtains a lock at the processor level.
+
+## Shameless self-plug
+
+You can find other Go ramblings on my blog at [justindfuller.com](https://justindfuller.com).
+
+.image ./images/blog.png _ 800
