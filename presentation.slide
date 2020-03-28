@@ -1,6 +1,11 @@
 # Deconstructing Go Concurrency Concepts
 
-Are you the type of person who needs to know how things work under the hood? If so, this interactive talk will provide a fun way to learn go concurrency concepts by building your own. We'll write our own version of Go's WaitGroup, Mutex, and Channel from scratch to see how they really work behind the scenes.
+Justin Fuller
+Software Engineer, The New York Times
+8 April 2020
+https://justindfuller.com
+justin.fuller@nytimes.com
+@justin_d_fuller
 
 ## 
 
