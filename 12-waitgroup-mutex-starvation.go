@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"runtime"
+	"sync/atomic"
 )
 
 func main() {
@@ -11,24 +13,24 @@ func main() {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			fmt.Println("Saw i =", i)
 
 			if i%10 == 0 {
 				defer wg.Done() // HL
 				wg.Add(1)       // HL
-				fmt.Println("Added an extra")
 			}
 		}(i)
 	}
 
 	wg.Wait()
-	fmt.Println("Done")
+	fmt.Println("WaitGroup.Wait() got the lock", i, "times.")
 }
+
+var i int64
 
 func (wg *WaitGroup) Wait() {
 	for {
 		wg.lock.Lock()
-		fmt.Println("WaitGroup Count: ", wg.i)
+		i++
 		if wg.i <= 0 {
 			wg.lock.Unlock()
 			break
@@ -54,12 +56,25 @@ func (wg *WaitGroup) Done() {
 	wg.i -= 1
 }
 
-type Mutex struct{}
+const (
+	unlocked = iota
+	locked
+)
+
+type Mutex struct {
+	isLocked int32
+}
 
 func (m *Mutex) Unlock() {
-
+	atomic.CompareAndSwapInt32(&m.isLocked, locked, unlocked) // HL
+	runtime.Gosched()
 }
 
 func (m *Mutex) Lock() {
-
+	for {
+		if atomic.CompareAndSwapInt32(&m.isLocked, unlocked, locked) { // HL
+			// The mutex was unlocked, now it's locked.
+			return
+		}
+	}
 }

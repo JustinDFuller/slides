@@ -1,24 +1,30 @@
 # Deconstructing Go Concurrency Concepts
 
-Justin Fuller
-Software Engineer, The New York Times
-8 April 2020
-https://justindfuller.com
-justin.fuller@nytimes.com
-@justin_d_fuller
-
-## 
-
-.image ./images/learn-to-code-nyt-deconstructing-go-concurrency-concepts.jpg _ 950
-
 ## Intro
 
 👋 I'm Justin Fuller, a Software Engineer at The New York Times. 
 
 I'm a self-taught developer with about 5 years of experience.
 
-I've worked professionally with Java, Coldfusion, JavaScript, C#, and Go. So far, Go is my favorite!
+I've worked professionally with Java, Coldfusion, JavaScript, C# .NET, and Go. 
 
+So far, Go is my favorite!
+
+## Warning ‼️
+
+I am not an expert on the internals of the Go Runtime or even concurrent programming.
+
+I have been writing code with these tools for several years.
+
+## Why am I giving this presentation?
+
+I want to demonstrate a learning style.
+
+* Have you ever taken a car engine apart? Radio?
+* You learn by investigating how it works, how all the parts fit together.
+* This is typically done on things you are already familiar with.
+* Gives you the ability to maintain and debug when something goes wrong.
+* They are no longer a "black box".
 
 ## What is a Concurrency Concept?
 
@@ -31,13 +37,16 @@ I've worked professionally with Java, Coldfusion, JavaScript, C#, and Go. So far
 
 ## How do you deconstruct a concept?
 
-1. Define
+1. Show
+    * Demonstrate the need for the concept with a broken example.
+
+2. Define
     * Agree on a clear explanation of what an implementation of the concept would accomplish.
 
-2. Use
+3. Use
     * If an implementation already exists, start with that.
 
-3. Create
+4. Create
     * After using any existing implementations, write and use your own.
 
 ## First, a little code.
@@ -66,6 +75,8 @@ We have defined what a waitgroup should do. We have used an existing implementat
 
 .play 2-customwaitgroup.go /type WaitGroup/,
 
+How would you fill this in?
+
 ## Filling in the logic 
 
 Could it really be this simple? 🙌
@@ -75,6 +86,7 @@ Could it really be this simple? 🙌
 ## Race Detector 🕵️‍♀️
 
 ```
+
 ❯ go run -race 3-race-condition-waitgroup.go
 Saw i = 0
 Saw i = 1
@@ -118,19 +130,58 @@ We've defined a Mutex, now we use an existing implementation. Again, we start wi
 
 .play 5-mutex.go /type WaitGroup/,
 
+## What does the race detector say?
+
+```
+
+❯ go run -race 5-mutex.go
+Saw i = 0
+Added an extra
+Saw i = 1
+Saw i = 2
+Saw i = 3
+Saw i = 4
+Saw i = 5
+Saw i = 6
+Saw i = 7
+Saw i = 8
+Saw i = 9
+Saw i = 10
+-- skip a few logs --
+Saw i = 98
+Saw i = 99
+Done
+```
+
 ## Build Your Own
 
 Just like before, we start with an empty shell that fulfills sync.Mutex's signature, but not behavior. The race condition reappears.
 
 .play 6-custom-mutex.go /type Mutex/,
 
+How would you fill this in?
+
 ## Filling It In
 
 .play 7-naive-mutex.go /type Mutex/,
 
+## Atomic
+
+From the pkg/sync/atomic documentation:
+
+```
+
+Package atomic provides low-level atomic memory primitives useful for implementing synchronization algorithms.
+
+These functions require great care to be used correctly. Except for special, low-level applications, 
+synchronization is better done with channels or the facilities of the sync package. 
+
+Share memory by communicating; don't communicate by sharing memory.
+```
+
 ## Without a race condition.
 
-.play 8-channel-mutex.go /const/,
+.play 8-atomic-mutex.go /const/,
 
 ## Can we go any lower?
 
@@ -142,8 +193,109 @@ We can't go any lower because the implementations of atomic are written in assem
 
 This code obtains a lock at the processor level.
 
-## Shameless self-plug
+## Is that really all there is? (Again)
 
-You can find other Go ramblings on my blog at [justindfuller.com](https://justindfuller.com).
+This code is 100x simpler than the Go standard library code. This can't be all there is.
 
-.image ./images/blog.png _ 800
+A little googling and reading through the Go source leads to a few scenarios I didn't think about:
+
+* Starvation
+* FIFO
+
+## Starvation?
+
+* The process cannot get the resource it needs to complete a task.
+* One goroutine is greedy and gets a lock far more often than others.
+
+Is that happening in my Waitgroup?
+
+```
+> go run 10-starvation.go
+WaitGroup.Wait() got the lock 17253 times
+
+> GOMAXPROCS=1 go run 10-starvation.go
+WaitGroup.Wait() got the lock 6153599 times
+```
+
+Wait() got the goroutine, 6,153,599 times. The other goroutines got it 220 times! There's definitely unfairness happening.
+
+## Running with GOMAXPROCS
+
+GOMAXPROCS determines the number of processes Go will use. Setting this to 1 will only allow 1 goroutine to run at a time.
+
+Let's focus on this scenario 
+
+## Classic Go Unfairness Example
+
+.code 10-sync-starvation.go /done :=/,
+
+## Results
+
+With Regular sync.Mutex
+```
+❯ go run 10-sync-starvation.go
+Slow Got 100 Fast Got 10
+```
+
+With My Custom Mutex
+```
+❯ go run 10-sync-starvation.go
+Slow Got 21 Fast Got 10
+```
+
+GOMAXPROCS=1 sync.Mutex
+```
+❯ GOMAXPROCS=1 go run 10-sync-starvation.go
+Slow Got 103 Fast Got 10
+```
+
+GOMAXPROCS=1 custom Mutex
+```
+❯ GOMAXPROCS=1 go run 10-sync-starvation.go
+It never finished, even after several minutes!
+```
+
+## Handling 1 Process
+
+.play 11-custom-mutex-starvation.go /Mutex\) Unlock/,
+
+```
+❯ GOMAXPROCS=1 go run 11-custom-mutex-starvation.go
+Slow got 11 Fast got 10
+```
+
+From the docs:
+
+> Gosched yields the processor, allowing other goroutines to run. It does not suspend the current goroutine, so execution resumes automatically.
+
+This mimics what the sync.Mutex does, with one exception. The sync.Mutex only does this when in "starvation mode".
+
+## Back to the original example
+
+Here's what happened when we ran the original WaitGroup with 1 process:
+```
+> go run 10-starvation.go
+WaitGroup.Wait() got the lock 17253 times
+
+> GOMAXPROCS=1 go run 10-starvation.go
+WaitGroup.Wait() got the lock 6153599 times
+```
+
+Now here's what happens:
+```
+❯ go run 12-waitgroup-mutex-starvation.go
+WaitGroup.Wait() got the lock 2 times.
+
+❯ GOMAXPROCS=1 go run 12-waitgroup-mutex-starvation.go
+WaitGroup.Wait() got the lock 2 times.
+```
+
+It's definitely more fair!
+
+## Performance Impacts
+
+How does this fairness impact performance?
+
+## FIFO
+
+Is the lock acting as a FIFO queue? Should it?

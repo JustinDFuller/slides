@@ -65,12 +65,12 @@ type Mutex struct {
 }
 
 func (m *Mutex) Unlock() {
-	atomic.CompareAndSwapInt32(&m.isLocked, locked, unlocked)
+	atomic.CompareAndSwapInt32(&m.isLocked, locked, unlocked) // HL
 }
 
 func (m *Mutex) Lock() {
 	for {
-		if atomic.CompareAndSwapInt32(&m.isLocked, unlocked, locked) {
+		if atomic.CompareAndSwapInt32(&m.isLocked, unlocked, locked) { // HL
 			// The mutex was unlocked, now it's locked.
 			return
 		}
