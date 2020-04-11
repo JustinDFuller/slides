@@ -1,0 +1,22 @@
+kind: pipeline
+name: default
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: deploy
+    image: nytimes/drone-gae
+    environment:
+      GAE_CREDENTIALS:
+        from_secret: GAE_CREDENTIALS_DEV
+    settings:
+      action: deploy
+      project: financial-calculator-dev
+      dir: .
+      app_file: app.yaml
+      max_versions: 1
+    when:
+      event: push
+      branch: [master]

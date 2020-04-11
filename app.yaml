@@ -1,0 +1,11 @@
+runtime: go113
+service: slides
+
+entrypoint: present # Run the golang/tools present command.
+
+automatic_scaling:
+  max_idle_instances: 1
+  max_instances: 1
+
+- url: /.*
+  script: auto

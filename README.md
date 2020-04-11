@@ -1,5 +1,7 @@
 # Deconstructing Go Concurrency Concepts
 
+[![Build Status](https://cloud.drone.io/api/badges/JustinDFuller/deconstructing-go-concurrency-concepts/status.svg)](https://cloud.drone.io/JustinDFuller/deconstructing-go-concurrency-concepts)
+
 ## Usage
 
 ```
