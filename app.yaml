@@ -1,6 +1,6 @@
 runtime: go113
 service: default
-entrypoint: 'vendor/golang.org/x/tools/cmd/present'
+entrypoint: vendor/golang.org/x/tools/cmd/present
 
 automatic_scaling:
   max_idle_instances: 1
