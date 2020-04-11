@@ -6,6 +6,11 @@ platform:
   arch: amd64
 
 steps:
+- name: build
+    image: golang
+    commands:
+      - go mod vendor
+
   - name: deploy
     image: nytimes/drone-gae
     environment:
