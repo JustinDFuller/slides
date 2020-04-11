@@ -1,5 +1,5 @@
 runtime: go113
-service: slides
+service: default
 entrypoint: present
 
 automatic_scaling:
