@@ -1,6 +1,8 @@
-# Deconstructing Go Concurrency Concepts
+# Slides
 
 [![Build Status](https://cloud.drone.io/api/badges/JustinDFuller/deconstructing-go-concurrency-concepts/status.svg)](https://cloud.drone.io/JustinDFuller/deconstructing-go-concurrency-concepts)
+
+This project contains slides for any Golang presentation that I do.
 
 ## Usage
 
