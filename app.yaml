@@ -1,6 +1,6 @@
 runtime: go113
 service: default
-entrypoint: present
+entrypoint: $GOPATH/bin/present
 
 automatic_scaling:
   max_idle_instances: 1
