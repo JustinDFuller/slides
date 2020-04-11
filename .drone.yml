@@ -13,7 +13,7 @@ steps:
         from_secret: GAE_CREDENTIALS_DEV
     settings:
       action: deploy
-      project: financial-calculator-dev
+      project: slides
       dir: .
       app_file: app.yaml
       max_versions: 1
