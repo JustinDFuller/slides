@@ -9,15 +9,10 @@ import (
 func main() {
 	var wg WaitGroup
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-
-			if i%10 == 0 {
-				defer wg.Done() // HL
-				wg.Add(1)       // HL
-			}
 		}(i)
 	}
 
@@ -30,7 +25,7 @@ var i int64
 func (wg *WaitGroup) Wait() {
 	for {
 		wg.lock.Lock()
-		i++
+		atomic.AddInt64(&i, 1)
 		if wg.i <= 0 {
 			wg.lock.Unlock()
 			break

@@ -1,8 +1,8 @@
 # Deconstructing Go Concurrency Concepts
 
-## Intro
+## 👋 Intro 
 
-👋 I'm Justin Fuller, a Software Engineer at The New York Times. 
+I'm Justin Fuller, a Software Engineer at The New York Times. 
 
 I'm a self-taught developer with about 5 years of experience.
 
@@ -10,15 +10,15 @@ I've worked professionally with Java, Coldfusion, JavaScript, C# .NET, and Go.
 
 So far, Go is my favorite!
 
-## Warning ‼️
+## ⚠️ Warning ⚠️
 
 I am not an expert on the internals of the Go Runtime or even concurrent programming.
 
 I have been writing code with these tools for several years.
 
-## Why am I giving this presentation?
+## Then why am I giving this presentation?
 
-I want to demonstrate a learning style.
+I want to demonstrate a learning style that I have found useful.
 
 * Have you ever taken a car engine apart? Radio?
 * You learn by investigating how it works, how all the parts fit together.
@@ -28,8 +28,10 @@ I want to demonstrate a learning style.
 
 ## What is a Concurrency Concept?
 
+* Deconstruct implies concrete, concept implies abstract.
+* A concurrency concept is the _idea_ behind a tool commonly used in concurrent programming.
 * Go has implementations of concepts.
-* Concept examples
+* Examples
   * WaitGroup
   * Mutex
   * Pool
@@ -51,9 +53,22 @@ I want to demonstrate a learning style.
 
 ## First, a little code.
 
-At this point, we are naive programmers with no concurrency concepts to aid us.
-
 .play 0-naive-concurrency.go /func main/,
+
+Ideally this would output something like:
+```
+Saw i = 9
+Saw i = 1
+Saw i = 6
+Saw i = 7
+Saw i = 8
+Saw i = 3
+Saw i = 2
+Saw i = 4
+Saw i = 5
+Saw i = 0
+Done
+```
 
 ## Our First Concept
 
@@ -112,7 +127,7 @@ Goroutine 7 (running) created at:
 
 ## Demonstrating the race condition
 
-_Note: I would not consider this correct usage of a WaitGroup._
+Looping 1000 times, instead of 10, shows the race condition.
 
 .play 4-demonstrate-race-condition.go /func main/,
 
@@ -165,23 +180,44 @@ How would you fill this in?
 
 .play 7-naive-mutex.go /type Mutex/,
 
+## A new concept
+
+This broken example shows that it's time for a new concept to aid us.
+
+We need a mechanism to lock a memory location _outside of our code_.
+
 ## Atomic
 
-From the pkg/sync/atomic documentation:
+It turns out such a thing already exists in the Go standard library's Atomic package.
 
-```
+From the documentation:
 
-Package atomic provides low-level atomic memory primitives useful for implementing synchronization algorithms.
+> Package atomic provides low-level atomic memory primitives useful for __implementing synchronization algorithms__.
 
-These functions require great care to be used correctly. Except for special, low-level applications, 
+> These functions require great care to be used correctly. Except for special, low-level applications, 
 synchronization is better done with channels or the facilities of the sync package. 
 
-Share memory by communicating; don't communicate by sharing memory.
-```
+> Share memory by communicating; don't communicate by sharing memory.
 
 ## Without a race condition.
 
 .play 8-atomic-mutex.go /const/,
+
+## What is it doing?
+
+Again, from the docs:
+
+```
+
+The compare-and-swap operation, implemented by the CompareAndSwapT functions, 
+is the atomic equivalent of:
+
+if *addr == old {
+	*addr = new
+	return true
+}
+return false
+```
 
 ## Can we go any lower?
 
@@ -195,12 +231,13 @@ This code obtains a lock at the processor level.
 
 ## Is that really all there is? (Again)
 
-This code is 100x simpler than the Go standard library code. This can't be all there is.
+This code is far simpler than the Go standard library code. This can't be all there is.
 
 A little googling and reading through the Go source leads to a few scenarios I didn't think about:
 
 * Starvation
-* FIFO
+* FIFO - First In, First Out
+* Performance - In `Lock` the loop just spins forever.
 
 ## Starvation?
 
@@ -223,11 +260,12 @@ Wait() got the goroutine, 6,153,599 times. The other goroutines got it 220 times
 
 GOMAXPROCS determines the number of processes Go will use. Setting this to 1 will only allow 1 goroutine to run at a time.
 
-Let's focus on this scenario 
+This helps us see what happens when the WaitGroup methods, like Wait and Defer, have to compete for processing resources.
 
 ## Classic Go Unfairness Example
 
 .code 10-sync-starvation.go /done :=/,
+
 
 ## Results
 
@@ -254,6 +292,12 @@ GOMAXPROCS=1 custom Mutex
 ❯ GOMAXPROCS=1 go run 10-sync-starvation.go
 It never finished, even after several minutes!
 ```
+
+## Hand Off
+
+Right now the Goroutine that holds the Mutex lock is able to hold it potentially forever.
+
+We need a way to let other Goroutines have a chance to get the Mutex lock.
 
 ## Handling 1 Process
 
@@ -292,10 +336,22 @@ WaitGroup.Wait() got the lock 2 times.
 
 It's definitely more fair!
 
-## Performance Impacts
+## Summary & Next Steps
 
-How does this fairness impact performance?
+There's a lot more left. To keep learning I will:
 
-## FIFO
+* Try to improve correctness. Is my Mutex acting in a FIFO manner, should it?
+* Try to improve performance. Can I detect when I need to use `Gosched`?
+* Try to improve performance again. Is an endless loop really the best way?
 
-Is the lock acting as a FIFO queue? Should it?
+## Your Next Steps
+
+You can do this for anything you're interested in learning. Turn the "black box" mystery into something
+understandable by building your own.
+
+* JavaScript Developers: write your own Promise or Array.
+* Data Analysts: write your own database.
+* Backend Developers: write your own http server.
+
+Good candidates are anything with an existing implementation that you can compare to.
+

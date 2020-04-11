@@ -8,17 +8,11 @@ import (
 func main() {
 	var wg WaitGroup
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
 			fmt.Println("Saw i =", i)
-
-			if i%10 == 0 {
-				defer wg.Done() // HL
-				wg.Add(1)       // HL
-				fmt.Println("Added an extra")
-			}
 		}(i)
 	}
 
@@ -28,8 +22,8 @@ func main() {
 
 func (wg *WaitGroup) Wait() {
 	for {
-		fmt.Println("WaitGroup Count: ", wg.i)
 		wg.lock.Lock()
+		fmt.Println("WaitGroup Count: ", wg.i)
 		if wg.i <= 0 {
 			wg.lock.Unlock()
 			break

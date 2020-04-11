@@ -37,17 +37,17 @@ func main() {
 			case <-done:
 				return
 			default:
-				mu.Lock() // HL
-				time.Sleep(100 * time.Microsecond)
-				mu.Unlock() // HL
+				mu.Lock()                          // HL
+				time.Sleep(100 * time.Microsecond) // Slow goroutine. Holds the lock a long time.
+				mu.Unlock()                        // HL
 			}
 		}
 	}()
 
 	for i := 0; i < 10; i++ {
-		time.Sleep(100 * time.Microsecond)
-		mu.Lock()   // HL
-		mu.Unlock() // HL
+		time.Sleep(100 * time.Microsecond) // Fast goroutine. Holds the lock briefly.
+		mu.Lock()                          // HL
+		mu.Unlock()                        // HL
 	}
 	done <- true
 }
